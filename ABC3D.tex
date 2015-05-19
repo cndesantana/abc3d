@@ -1,0 +1,794 @@
+\documentclass[11pt]{article}
+\usepackage{latexsym}
+\usepackage{caption2}
+\usepackage{flafter}
+\usepackage{graphicx}
+\usepackage{natbib}
+
+\usepackage{amssymb,amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage[usenames,dvipsnames,table]{xcolor}
+\usepackage[mathlines,displaymath]{lineno}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+%\usepackage[font=small,format=plain,labelfont=bf,up,textfont=it,up]{caption}
+\usepackage{anyfontsize}
+\usepackage{rotating}
+\usepackage{color}
+\usepackage{verbatim}
+
+\newcommand{\etal}{{et~al.{}}}
+\newcommand{\ie}{{i.~e.{}}}
+\newcommand{\eg}{{e.~g.{}}}
+\newcommand{\viz}{{viz.{}}}
+\newcommand{\etc}{{etc.{}}}
+\newcommand{\apriori}{{a priori{}}}
+\newcommand{\vv}{{vice versa{}}}
+\Newcommand{\cf}{{}}
+\usepackage{titling}
+\setlength{\droptitle}{-10em}   % This is your set screw
+\newcommand{\carlos}[1]{\textcolor{Red}{#1}}
+
+\oddsidemargin 0.35cm 
+\textwidth 16cm 
+\textheight 20cm 
+
+\begin{document}
+\title{{\bf Inferring radiations with Approximate Bayesian
+    computation}} \author{Charles N. de
+  Santana$^{1,*}$, Gregor Kalinkat$^{1,*}$, Jakob Brodersen$^{1}$, Ole Seehausen$^{1}$,\\
+  Carlos J. Meli\'an$^{1}$ \carlos{AUTHORSHIP ORDER MAY CHANGE}\\
+  $^1$Department of Fish Ecology and Evolution \\
+  EAWAG, Swiss Federal Institute of Aquatic Science and Technology\\
+  Center of Ecology, Evolution and Biochemistry, Kastanienbaum, Switzerland\\
+  \\
+  Keywords: $\alpha$, $\beta$ and $\gamma$-richness,\\
+  anagenesis speciation, cladogenesis speciation, metacommunity dynamics,\\
+  Type of Article: Article\\
+  Number of figures: X; Number of tables: \\
+  $\ast$ Corresponding author: e-mail: charles.desantana@eawag.ch}
+\carlos{PROYECT TITLE: \\ Eco-evolutionary biodiversity
+  dynamics in river-lake dendritic networks\\
+  \\
+  \\
+  MAIN AIM: Add value to existing Switzerland-wide fish metacommunity
+  samplings by developing a theoretical framework to discriminate the
+  most important mechanisms driving biodiversity and radiation
+  dynamics at small and large spatial scales
+  \\
+  \\
+  MAIN TASKS: 1) Extend julia codes to a second model adding
+  density-dependent biodiversity dynamics; 2) Use the ProjetLac
+  database together with P/A lake-species matrix data, pairwise
+  distance-altitude matrix data and phylogeny data; 3) Implement ABC
+  methods by adding them to the julia or doing the ABC in r or similar
+  languages.
+  \\
+  \\
+  POINTS TO DISCUSS: 1) Extending julia to a second model; 2) Checking
+  the data from $ProjetLac$; 3) Use flow 30-year time series data
+  (Philipp contribution)?; 4) Joining outputs from julia with r o
+  similar to perform an ABC; 5) Draw dendritic networks; 6) Writing methods and results}
+ %Short running title: Multiple radiation zones in 3d dendritic networks\\
+  %Number of words abstract: 129\\
+  %Number of words main text: 4984\\
+  %Number of references: 50\\
+\date{}
+
+\maketitle
+\baselineskip=8.75 mm
+\linenumbers
+\modulolinenumbers[2]
+\doublespacing
+
+\newpage
+\begin{abstract} 
+.
+\end{abstract}
+
+\newpage {\fontsize{12}{22} \selectfont
+
+ \section{Introduction}
+\carlos{WRITTEN MOSTLY BY OLE: REFERENCES NOT INCLUDED IN THE .bib}
+  Freshwater communities of fish in lakes are among the richest
+  vertebrate species assemblages on Earth (Vadebonceur et al. 2011;
+  other refs), but they are also among those with the steepest rates
+  of species loss (Vonlanthen et al. 2011; Seehausen et al. 1997;
+  other refs) due to eutrophication, climate change, invasive species
+  and the interaction of these factors (Vorosmarthy et al 2010). Yet,
+  surprisingly little theory and even less data is available to
+  predict how the effects of these environmental factors depend on the
+  history and mechanism of assembly of freshwater communities. Lake
+  fish communities range from little isolated entirely
+  immigration-assembled communities to nearly entirely
+  speciation-assembled, with all intermediate combinations of both
+  processes (Wagner et al. in press). There are many reasons to expect
+  that communities assembled by different mechanisms can respond very
+  differently to environmental change.
+
+Freshwater bodies in general, and lakes in particular, support
+exceptionally high numbers of endemic species per unit area. Several
+examples have shown that diversity in these systems can suddenly
+collapse when ecosystems are perturbed, and it does often not recover
+after ecosystem restoration (refs for Lake Victoria; Swiss lakes;
+Laurentian Great lakes; Lake of Mindanao). Very little is known about
+how environmental change factors interact with each other and with the
+assembly history of species communities to determine loss of diversity
+and consequences for ecosystems. Freshwater ecosystems, and large
+lakes in particular, are strongly geographically isolated for
+organisms that lack terrestrial or airborne dispersal phases such as
+fish. Large lakes have unique and diverse habitats that provide
+resources for large and very diverse populations, but colonization of
+lake-specific habitats like the pelagic and profundal zones often
+requires in-situ evolution and speciation because river fish can
+rarely colonize such habitats and lakes are often extremely strongly
+isolated from other lakes. Lakes hence function like isolated oceanic
+islands where in-situ evolution is a major source of biodiversity
+(Hudson et al. 2011; Wagner et al. in press).
+
+Theory suggests that the assembly of communities by in-situ evolution
+and by dispersal from a regional pool make very different predictions
+for richness and abundance. For instance, whereas the species-area
+curve in dispersal-assemblies typically has a slope around 0.3, it is
+much steeper (near 1) for communities assembled by speciation
+(Rosenzweig 2001; Wagner et al. in press). Theory and data suggest
+that locally evolved species are often more abundant than others
+(Rosindell & Phillimore 2011). Yet, little is known about how the
+topology of 3D networks change the assembly process of endemic and
+non-endemic species in metacommunities. While clearly a questions of
+considerable relevance to conservation in general, this is especially
+pressing for freshwater ecosystems. Their heavy reliance on evolution
+for the building of species diversity is expected to influence the
+ways these ecosystems respond to environmental change. One might for
+instance expect more dramatic responses in speciation-assembled
+communities because of the steeper scaling of richness and abundance
+with area and the often much larger per area-richness (Wagner et
+al. in press). Another important difference is that in
+speciation-assembled communities even transient and reversible
+perturbation of niche structure can lead to irreversible collapses of
+species diversity within just a few generations (Seehausen et
+al. 1997; Vonlanthen et al. 2011).
+
+Here we develop a process-based modeling framework for island
+biogeography with speciation in a 3D dendritic network of lakes
+connected by streams to predict the emergence of species richness
+through immigration, speciation and in situ radiation. We focus on
+fish but our model may be applicable more widely to lacustrine
+biota. However, fish account for more than 60$\%$ of all endemic
+animal species in lakes globally (Vadebonceur et al. 2011). At the
+same time fish represent critical links in aquatic food webs. To
+parametrize our model and test its utility, we make it spatially
+explicit and apply it to the network of large subalpine lakes of
+central Europe, a hotspot of freshwater fish endemism in Europe
+(Kottelat & Freyhof). Our
+empirical data includes $>$20 large lakes and connected rivers located
+in three archipelagos of large subalpine lakes north (Rhine), west
+(Rhone) and south (Po) of the central Alps. In each archipelago we
+have sampled a similar range of lakes in terms of size, elevation but
+the archipelagos have distinct assembly histories. The communities of
+all lakes assembled within the Holocene, i.e. in the past 15000
+years. But whereas on the South-side of the central Alps, there was
+rapid recolonization by many lineages from nearby southern refugia
+with only few glacial relict species surviving, northern and western
+lakes were probably colonized rapidly by just a handful of cold water
+fish lineages that may have survived the Pleistocene in near refugia,
+but then were colonized by all the other lineages only slowly from
+distant eastern (Black Sea) refugia. They retained a diverse set of
+cold-water adapted glacial relicts, many of which diversified into
+ecologically diverse lake endemics. As a consequence, lake fish
+communities range from entirely immigration assembled to those with
+large contributions of speciation. Locally evolved species fill
+ecological key roles in most northern and some western lakes, but not
+in the southern lakes. We compare data with model predictions of
+species richness, endemism and radiation.
+
+\carlos{COMMENT ON NEW THEORY IN 2D DENDRITIC NETWORKS AND POPULATION
+  DYNAMICS} To generate theoretical expectations for diversity in each
+lake, we developed an individual-based stochastic simulation model
+building on recent evolutionary extensions of island biogeography
+theory (Rosindell and Phillimore 2011; hereafter R&P). We are asking
+how richness scales with isolation and lake size, and how the assembly
+process affects this scaling and also the abundances of species. Island biogeography theory has
+been almost exclusively tested in terrestrial island systems. This is
+the first evolutionary island biogeography model for freshwater
+systems. We wish it will help understand the evolutionary and
+ecological dynamics of lacustrine species assembly including the
+formation of endemism and radiations. We expect that our results will
+also contribute to predicting and explaining variation in the
+susceptibility of ecosystems to environmental change.
+
+\carlos{MAIN RESULTS}
+Our modeling framework can be extended in several directions in the
+future, including predicting intraspecific genetic and trait diversity
+and the genetic distinctiveness of populations. With the increasingly
+wide access of Next Generation Sequence methods for non-model
+organisms, population genomic data can now easily be collected to test
+the predictions. Other possible extensions are to merge our island
+biogeography model with whole-island regression and habitat-unit
+models in 3D (i.e., lake depth or an ecological gradient) to study the
+effects of habitat diversity and lake size separately, with habitat
+occupation models (Gusian & Rahbek 2011) and with trophic theory of
+island biogeography (Gravel et al. 2011).
+
+\section{Methods}
+
+ \carlos{START WITH A BRIEF INTRODUCTION OF THE AT LEAST TWO MODELS TO TEST: WHY DO WE EXPLORE THESE TWO SCENARIOS? HOW DO THEY DIFFER AND WHY? HOW ARE WE GOING TO COMPARE THEM USING ABC? (See a flow chart in Fig. 2 )}
+
+\subsection{Two scenarios}
+
+ \carlos{EXPLAIN THE TWO SCENARIOS IN DETAIL}
+
+\carlos{FROM HERE METHODS ARE COMMON TO THE TWO SCENARIOS}
+
+\subsection{3D dendritic networks}
+
+We generate landscapes consisting of randomly located sites with a
+spatial location given by $x_{i}$, $y_{i}$ and $z_{i}$ with $z_{i}$
+representing the altitude (Figure 1 \carlos{SHOW A 3D DENDRITIC NETWORK}). The
+hydrological distance between each pair of nodes is given by the
+Euclidean distance. We distinguish two types of nodes. Nodes that
+represent lakes with population dynamics and nodes that represent
+streams without population dynamics. The third dimension, $z_{i}$
+represents elevation randomly sampled from a uniform distribution with
+minimum and maximum elevation ranging between 10m and 1000m,
+respectively.
+
+
+%Two nodes {\em i} and {\em j} occur if
+%the Euclidean distance between them, $d_{ij}$, is equal or smaller
+%than a threshold distance, $d_{max}$. The fraction of sites connected
+%in a single component (i.e., giant component) depends on the distance
+%threshold considered: the smaller the distance threshold the larger
+%the size of the giant component. We explored distance thresholds that
+%generate a network with a single component like a spanning tree
+%(Figure 1) \citep{Penrose:2003}.
+
+
+\subsection{Population dynamics}
+
+We run an individual-based model based on demographic stochasticity on
+3D dendritic networks using two speciation modes. This will enable us
+to predict the effect of isolation in 3D dendritic network on the
+number of endemic species, radiation zones and species richness. Individuals organisms die at a constant rate, thus species'
+populations can dwindle the population size and become extinct via the
+process of demographic stochasticity or ecological drift (ref). The
+smaller the population size, the greater the probability of imminent
+extinction. The probability to choose a lake to have demographic
+events (i.e., births and deaths) is the same across all the
+lakes. Thus we assume that all the lakes have the same volume or area.
+
+%a function of its carrying capacity (number of individuals
+%proportional to total volume of the lake). Thus
+%\begin{equation}
+%  p_{i} = \left(\frac{J_{i}}{\sum\limits_{j = 1}^{\mathcal{T}} J_{j}}\right),
+%\label{dispfreq}
+%\end{equation}
+%with $J_{i}$ the overall number of individuals in lake $i$ and
+%$\mathcal{T}$ is the number of lakes in the dendritic network. 
+
+Each lake $i$ is at its carrying capacity with the number of
+individuals in each lake fixed. With every death of an individual on a
+lake, a gap opens. With probability $1 - m - \nu - \mathcal{K}$ this
+gap will be filled by offspring from another living individual on the
+lake, and with probability $m$, $\nu$, or $\mathcal{K}$ the gap will
+be filled by an immigrant, from an regional migration event, or from a
+cladogenesis initiation event, respectively (see below section
+``Dispersal dynamics''). We model two distinct modes of speciation;
+cladogenesis and anagenesis. \carlos{DESCRIBE HOW WE MODEL CLADO-
+  AND ANAGENESIS. SPECIFICALLY WE HAVE TO DESCRIBE THAT CLADOGENESIS IS CORRELATED WITH ANAGENESIS IN BOTH SCENARIOS}
+
+\subsection{Dispersal dynamics}
+
+We frame our hypothesis in dendritic networks using elevation and the
+hydrological distance between each pair of nodes (i.e., lake-stream,
+stream-stream, stream-lake). We start by describing the simplest
+scenario in a 2D network. Dispersal rate between two nodes is a
+function of their hydrological distance. This leads to the dispersal
+rate of species $k$ from lake $j$ to the lake receiving the migrant,
+the lake $i$
+\begin{equation}
+m^{k}_{ij} = m \left(\frac{1}{d_{n,j} + \sum\limits_{n = 1}^{\mathcal{N}-1} d_{n+1,n}+ d_{i,n+1}}\right),
+\label{neutdis}
+\end{equation}
+where $d_{n,j}$, $d_{n+1,n}$, and $d_{i,n+1}$ are the hydrological
+distances between lake $j$ and node $n$, node $n$ and node $n+1$, and
+node $n+1$ and lake $i$, respectively, and $m$ is the intensity of
+dispersal rate. An extension of equation (\ref{neutdis}) to a 3D
+network considers dispersal rate not only as a function of the
+distance, but also as a function of elevation distance between lakes
+or nodes in the network. This leads to the dispersal rate of species
+$k$ from lake $j$ with elevation $e_{j}$ to lake $i$ with elevation
+$e_{i}$
+%satisfying $e_{j}$ $\geq$ $e_{i}$ is
+\begin{equation}
+m^{k}_{ij} = m \left(\frac{1}{d_{n,j}^{x} + \sum\limits_{n = 1}^{\mathcal{N}-1} d_{n+1,n}^{x} + d_{i,n+1}^{x}}\right),
+\label{dispfreq1}
+\end{equation}
+with
+\begin{linenomath}
+$x$
+\begin{equation}
+\begin{cases}
+x = 1, \hspace{0.25 in} e_{em} \hspace{0.05 in} \geq \hspace{0.05 in} e_{im},\\
+x = \frac{(1 + c(e_{im} - e_{em}))}{1}, \hspace{0.25 in} e_{im} \hspace{0.05 in} $>$ \hspace{0.05 in} e_{em},\\
+\end{cases}
+\end{equation}
+\end{linenomath}
+where $c$ is the upstream migration cost between two nodes, $e_{em}$
+and $e_{im}$ represent the elevation of the emigration (i.e., $e_{j}$,
+$e_{n}$, $e_{n+1}$) and immigration (i.e., $e_{i}$, $e_{n}$,
+$e_{n+1}$) nodes. We note that equation (\ref{dispfreq1}) is the same
+than equation (\ref{neutdis}) when $c$ = 0, that is, when upstream
+migration cost is not present as part of the dynamics (i.e., from 3D
+to a 2D network). We consider downstream migration has not cost and
+use the same hydrological distance between two nodes (i.e., x = 1). At
+a given upstream migration cost, the larger the difference in
+elevation between two nodes the lower the dispersal rate between these
+two nodes (Figure 3).
+
+\subsection{Regional species pool}
+
+Dispersal dynamics between the regional species pool and the
+dendritic-network is represented throughout an entry point considered
+in each basin as the point at the lowest elevation. Species in the
+regional pool and species in the dendritic-network form two distinct
+sets. New species can emerge with very low probability, $\nu$, from
+the regional species pool. We consider an extremely diverse regional
+species pool, containing an infinite number of species. Because of the
+infinite number of species in the regional pool, we assume that every
+immigration event introduces a new species. Immigration of a new
+species corresponds to (allopatric) speciation in the context of
+metacommunity models \citep{Vanpeteghem&Haegeman:2010}. \carlos{SHOULD WE EXPLORE DIFFERENT DISTRIBUTIONS OF ABUNDANCE IN THE SPECIES
+REGIONAL POOL?}
+
+%We then select an individual from the regional pool with probability $p$ an indi 
+%Every immigration event introduces a new species in the
+%metacommunity. We represent this dispersal rate from the regional
+%species pool as $\nu$. It can be considered as a speciation rate in
+%the context of metacommunity models (We have to explicitly mention how
+%we consider protracted
+%speciation). %\citep{Vanpeteghem&Haegeman:2010}.
+
+
+\subsection{Speciation dynamics}
+
+\subsubsection{Cladogenesis}
+
+To model cladogenesis we follow a version of protracted speciation
+(ref) under which speciation is a gradual process rather than an
+instantaneous event. Variant individuals appear at per capita rate
+$\mathcal{K}$ and are each conspecific with their parent species. The
+probability $\mathcal{K}$ of cladogenesis initiation is expected to be
+small; as this can be interpreted as implicitly encompassing gene
+flow' homogenizing influence on speciation. Variants may give rise to
+offspring according to the previous demographic rules and if any
+offspring survive after a transition time of $\tau$ generations has
+passed, then they are treated as a new species. This way of modeling
+cladogenesis does not necessarily imply sympatric speciation within a
+lake and it is equally consistent with intralake allopatric or
+parapatric speciation. \carlos{SHOULD WE MENTION SOMETHING ABOUT
+  CLADOGENESIS ON 3D DENDRITIC NETWORKS?}
+
+\subsubsection{Anagenesis}
+
+We model anagenesis extending previous approaches (ref) to a 3D
+dendritic network \carlos{AND ADD USTREAM COST TO ARRIVE TO HIGH ELEVATION
+LAKES (EQUATION 2)}. In our model the first immigrant to a lake is
+always regarded as being a variant but it is not yet an endemic
+species. If the lake variant population survives for $\tau$
+generations with no further immigration of conspecifics, then it will
+be recognized as a new species. Prior to $\tau$ generations elapsing,
+every further conspecific immigrant joining the lake population
+retards anagenesis by increasing the remaining time to speciation
+completion by $G$ (a small pre-defined amount); in this way
+sufficiently high gene flow makes speciation near impossible. We never
+allow the remaining waiting time to speciation be greater than
+$\tau$. Completed speciation events cannot be reversed; once a lake
+endemic is formed, further immigration of the mainland sister species
+will not affect it, but will instead form a new variant that can
+potentially become another endemic species. The complete model with
+all the parameters used in explained graphically in Figure 2.
+
+\subsubsection{Patterns in the data: $\alpha$-, $\beta$- and $\gamma$-richness, isolation and phylogeny}
+
+\subsubsubsection{$\alpha$-, $\beta$- and $\gamma$-richness}
+
+
+\subsubsubsection{Isolation}
+
+We calculate isolation of lake $i$ as the sum of all distances between
+the focal lake $i$ and all other lakes in the network. This leads to
+the isolation of lake $i$,
+\begin{equation}
+I_{i} =  \sum_{j=1}^{S} \left(d_{n,j}^{x} + \sum\limits_{n = 1}^{\mathcal{N}-1} d_{n+1,n}^{x} + d_{i,n+1}^{x}\right),
+\label{dispfreq2}
+\end{equation}
+where $d_{n,j}$, $d_{n+1,n}$, and $d_{i,n+1}$ are the hydrological
+distances between lake $j$ and node $n$, node $n$ and node $n+1$, and
+node $n+1$ and lake $i$, respectively, and $S$ is the number of lakes
+in the network.
+
+\subsubsubsection{Phylogeny}
+
+\carlos{ASK OLE OR JAKOB FOR THE DATA}
+
+
+\subsection{Simulations}
+
+\carlos{THIS IS A VERY PRELIMINARY PARAGRAPH FROM THE THEORETICAL PAPER}
+Simulations were done with one initial metapopulation containing only
+one species across $S$ lakes with $S$ = 100, and each lake $i$
+containing a fixed number of individuals, $J_{i}$ = 100. Subsequently
+we ran simulations following equation (\ref{dispfreq1}). The number of
+generations per replicate was 10,000 and one generation, $G$, is
+10000 iterations ($S x J_{i}$).
+%The number of individuals per lake was chosen to be a function
+%of total volume of the lake and we ensured the total number of
+%individuals across all the lakes was sufficiently large to guarantee
+%robust predictions for a broad range of parameter combinations (i.e.,
+%total number of individuals, $J$ = $10^{6}$).
+Results plotted in xx and xx were obtained after running $20$
+replicates per cost, $c$, considering a priori rates of dispersal from
+the regional species pool, $\nu$, metacommunity-specific background
+dispersal, $m$, and probability of cladogenesis initiation,
+$\mathcal{K}$, following a uniform distribution with values in the
+range $\nu$ $\in$ [$10^{-4}$, $10^{-3}$], $m$ $\in$ [2 $\times$
+$10^{-2}$, 2 $\times$ $10^{-1}$], and $\mathcal{K}$ $\in$ [$10^{-5}$,
+$10^{-4}$], respectively. Local birth rates for each metacommunity,
+$\lambda$, were obtained as $\lambda$ = $1 - \nu - m -
+\mathcal{K}$. Transition time for cladogenesis, $\tau$, and the number
+of generations retarding anagenesis, $\mathcal{G}$, follow 2
+generations and 20 time steps (20/$G$ generations), respectively. For the
+simulations, we set each time step to have one birth-death event in a
+randomly selected lake. Thus, natural mortality was set to 1.
+
+\subsection{Approximate Bayesian computation: model-data comparison}
+
+\carlos{MOSTLY FOLLOW THE OUTLINE FROM THE AM NAT}
+
+\section{Results}
+
+%{\bf DOES UPSTREAM COST ALTER THE NUMBER AND TYPE OF SPECIATION
+%  EVENTS? NOTE UPSTREAM COST INCREASES ASYMMETRY IN DISPERSAL BETWEEN
+%  LAKES SO WE SHOULD PRESENT RESULTS HIGHLIGHTING THIS PHENOMENA}
+
+
+\section{Discussion}
+
+%{\bf MODEL DESCRIPTION AND WHY UPSTREAM COST? HOW UPSTREAM COST
+%  RELATES TO SPECIATION AND THE NUMBER OF SPECIES? HOW REALISTIC
+%  DENDRITIC NETWORK WOULD ALTER THE RESULTS PRESENTED?}
+
+
+\begin{comment}
+We have yet to describe the two models and how we implement these two
+mechanisms in the general eqs (5).
+
+%\subsubsection{Density-independent biodiversity dynamics}
+%\subsubsection{Density-dependent biodiversity dynamics}
+
+%\subsection{Metacommunity dynamics}
+
+Here, we describe the equations that combine dispersal and population
+dynamics across multiple lakes in a broad geographic region. We track
+demography and species abundances at each site by considering at each
+time step a birth-death event within a lake. Each lake is at its
+carrying capacity and the death of an individual in a given site is
+compensated by a new individual within the lake. The new individual
+can be of the same species as the dead individual or another
+species. The recruitment is either due to local reproduction (birth)
+or dispersal from another sampled lake, or immigration from the
+regional species pool. The following equations provide a mathematical
+description of the metacommunity dynamics
+\begin{equation}
+\begin{array}{lcr}
+\hspace{-0.25 in}P \left(N_{i}^{k} - 1 | N_{i}^{k} \right) = p_{i} M^{k}_{i} \left[\sum\limits_{j=1,j\ne i}^{\mathcal{T}} \sum\limits_{k'=1,k'\ne k}^{S_{j}} m_{ij}^{k'} \left(\frac{N_{j}^{k'}}{J_{j}}\right) + \lambda \left(\frac{J_{i} - N_{i}^{k}}{J_{i} - 1}\right) + \frac{m_{p} P_{j}}{D_{oi}} + \left(\nu_{c} (\frac{S_{T} - S_{i}}{S_{i}})\right)\left(\frac{J_{i} - N_{i}^{k}}{J_{i} - 1}\right) \right]\\[0.5cm]
+\label{master1}
+\\
+\hspace{-0.25 in}P \left(N_{i}^{k} - N_{c} | N_{i}^{k} \right) = \nu_{a} (\frac{S_{T} - S_{i}}{S_{i}})\right)\\[0.5cm]
+\\
+\hspace{-0.25 in}P \left(N_{i}^{k} + 1 | N_{i}^{k}\right) = (1 - M^{k}_{i}) \left[\sum\limits_{j=1,j\ne i}^{\mathcal{T}} m_{ij}^{k}} \left(\frac{N_{j}^{k}}{J_{j}}\right) + \lambda \left(\frac{N_{i}^{k}}{J_{i} - 1}\right) + \frac{m_{p} P_{j}}{D_{oi}} + \left(\nu_{c} (\frac{S_{T} - S_{i}}{S_{i}})\right)\left(\frac{J_{i} - N_{i}^{k}}{J_{i} - 1}\right) \right]\\[0.5cm]
+\\
+\hspace{-0.25 in}P \left(N_{i}^{k} + N_{c} | N_{i}^{k} \right) = \nu_{a} (\frac{S_{T} - S_{i}}{S_{i}})\right),\\[0.5cm]
+\end{array}
+\label{master}
+\end{equation}
+where $p_{i}$ and $M^{k}_{i}$ describe the probability to choose lake
+$i$, and the density-dependent mortality of species $k$ in lake $i$,
+respectively. This mortality is considered the natural per capita
+mortality rate described by $\mu^{k}
+\frac{N_{i}^{k}}{J_{i}}$. $N_{i}^{k}$ and $J_{i}$ are the number of
+individuals of species $k$ in lake $i$ and the number of individuals
+in lake $i$, respectively. 
+
+In addition to the mortality rate, there are six more parameters:
+$\lambda$, the local birth rate, $m$, the background dispersal rate
+(eqs. 1 and 2), protracted speciation or speciation by cladogenesis,
+$\nu_{c}$ (parameter k), and speciation by anagenesis, $\nu_{a}$, that
+is a function of gene flow, $G$, to lake $i$. $D_{oi}$ and
+$\mathcal{S}_{j}$ are the total distance from entry point, $o$ in the
+basin to the lake $i$, and the total number of species in lake $j$,
+respectively...
+
+{\bf The first equation in (\ref{master}) gives the transition probability
+for the $k^{th}$ species to decline in abundance by one individual in
+lake $i$. For this to happen an individual dies in the $k^{th}$
+species, which is given by $M^{k}_{i}$. The first probability inside
+the brackets is that of an immigration event of some species other
+than $k$ from a lake different to $i$. The second term represent the
+probability of having a local birth in a species other than $k$. The
+third term describes probability of a dispersal event from the
+regional species pool (here is where we have to describe the clado and
+anagenesis processes). The second equation in (\ref{master}) describes
+the transition probability for the $k^{th}$ species to increase by one
+individual. For this to happen, there must be no local death in
+species $k$ which is given by 1 - $M^{k}_{i}$. The other terms in
+brackets stand for dispersal (the first term), local birth of an
+individual of species $k$ (second term), and immigration of a new
+species $k$ from the regional species pool. This last event can occur
+only when there was no such species, i.e., when $N_{i}^{k}$ = 0 at
+time $t - 1$.}
+
+\end{comment}
+
+
+
+
+\begin{comment}
+This implies dispersal rate between lake $i$ and $j$ is
+the same than between lake $j$ and $i$. The last hypothesis assumes
+dispersal dynamics in heterogeneous landscapes accounting for
+geographical distance between each pair of sampled lakes and
+elevation. All hypothesis assume density-independent dispersal
+dynamics. That is to say, the number of conspecifics that are already
+in the original or in the receiving site do not influence decisions of
+individuals to leave or to arrive.
+\subsubsection{Mainland-lake dispersal dynamics in homogeneous landscapes}
+Our first hypothesis assumes the dispersal rates between the mainland
+and an island is a function of the geographic distance and size of the
+island. An individual from the mainland has the same preference for
+any other site and it is only the geographic distance and the size of
+the island what determines the new island of the immigrant.
+\subsubsection{Mainland-network dispersal dynamics in homogeneous landscapes}
+A simple extension of the first hypothesis assumes that dispersal
+rates depend not only on the geographic distance between mainland-lake
+and size of the lake but also on the geographical and elevation
+distance between lakes. 
+
+\subsubsection{Mainland-network dispersal dynamics in heterogeneous landscapes}
+
+Our last hypothesis assumes the rate of dispersal between lake $j$ and
+$i$ is different to the rate of dispersal between lake $j$ and $i$ and
+individuals from the periphery of the network move with higher
+probability to the center of the network. The dispersal rate of a species $k$ from lake
+$j$ with elevation $e_{j}$ to lake $i$ with elevation $e_{i}$ satisfying
+$e_{j}$ $\geq$ $e_{i}$ is now
+\begin{equation}
+  m_{ij}^{k} = m
+  \left(\frac{\frac{S_{i}}{(d_{ij})^{1/e}}}{\sum\limits_{\ell=1, \ell \ne i}^{\mathcal{T}} (d_{i \ell})^{1/e}} \right),
+\label{dispfreq}
+\end{equation}
+where $\mathcal{T}$ is the number of lakes and all the other
+parameters are as in the previous two hypothesis. Individuals move
+with a higher rate from the higher lakes in the periphery to the low
+elevation lakes in the center of the network.
+
+\subsection{Spatial patterns of radiations}
+
+
+
+\subsection{A case study with metacommunity data}
+
+\subsubsection{Geographic distance between sampling sites}
+
+The data analyzed in this study were collected between 1954 and 2004
+with different sampling efforts at 302 sites \citep{Stary:2006}. The
+data describe tritrophic associations between 411 plant species, 267
+aphid species, and 302 Hymenoptera parasitoid species (families
+Braconidae and Aphidiinae). Each site is characterized by two
+coordinates $(x_1,x_2)$ corresponding to its position on a grid
+overlayed on the map of the Czech republic. The coordinates allow us
+to calculate the Euclidean distance between any two sites ($x_{1}$,
+$x_{2}$) and ($y_{1}$, $y_{2}$) as
+\begin{equation} 
+d_{ij} = \sqrt{A^2 (x_1 - y_1)^2 + B^2 (x_2 - y_2)^2},%^{1/2},
+\end{equation}
+where A = 12 and B = 11.1 km is the constant grid size of 12 $\times$
+11.1 km.
+
+\subsection{Approximate Bayesian computation: model-data comparison}
+
+Simulations were done with three initial metapopulations each
+containing only one species across all the sites. Subsequently we ran
+simulations following equation (\ref{master}). The density-independent
+dispersal dynamics for the resources, ($R$), hosts, ($H$) and
+parasitoids, ($P$) used equation (\ref{neutdis}) for the dispersal
+rate in equation (\ref{master}), while the density-dependent model
+used equation (\ref{dispfreq}). We ensured the number of generations
+and the number of individuals per site was sufficiently large to
+guarantee robust predictions for a broad range of parameter
+combinations (Figs. 3-5). The number of generations and number of
+individuals per site and replicate were chosen from a uniform
+distribution in the range [$1$, 3 $\times$ $10^{4}$] and [$10^{3}$,
+$10^{4}$], respectively.
+
+Results were obtained after running $10^{4}$ replicates considering a
+priori rates of dispersal from the regional species pool for each
+metacommunity, $\nu_{\mathcal{\phi}}$, and metacommunity-specific
+background dispersal, $m_{\mathcal{\phi}}$, following a uniform
+distribution with values in the range $\nu_{\mathcal{\phi}}$ $\in$
+[$10^{-4}$, $10^{-2}$], and $m_{\mathcal{\phi}}$ $\in$ [$10^{-3}$, 7
+$\times$ $10^{-1}$], respectively. Local birth rates for each
+metacommunity, $\lambda_{\mathcal{\phi}}$, were obtained as
+$\lambda_{\mathcal{\phi}}$ = 1 - $\nu_{\mathcal{\phi}}$ -
+$m_{\mathcal{\phi}}$. For the simulations, we set each time step to
+have one birth-death event in a randomly selected site within each
+metacommunity $\mathcal{\phi}$. Thus, natural mortality rate for
+plants ($\mu^{k_{R}}$) and parasitoids ($\mu^{k_{P}}$), top-down
+mortality rate for the aphid-parasitoid interactions ($\alpha^{k_{H}
+  k^{'}_{P}}$), and bottom-up mortality rate for the plant-aphid
+interactions ($\alpha^{k_{R}k^{'}_{H}}$) were all set to 1. We remark
+that the bottom-up interactions between plant and aphids do not have
+consequences for the population dynamics of plants (Fig. 2).
+
+After each run we checked whether the simulated connectance in each
+site $i$ between plants-aphids and aphids-parasitoids was in the
+empirical range (0.02-0.24) across all sites. Connectance in each site
+$i$ for the resource-host and for the host-parasitoid was defined as
+$C^{RH}_{i}$ = $\frac{L^{RH}_{i}}{S^{R}_{i} \times S^{H}_{i}}$, and
+$C^{HP}_{i}$ = $\frac{L^{HP}_{i}}{S^{H}_{i} \times S^{P}_{i}}$,
+respectively. Here $L^{RH}_{i}$, $L^{HP}_{i}$, $S^{R}_{i}$,
+$S^{H}_{i}$, and $S^{P}_{i}$ are the number of interactions between
+plant-aphids and aphids-parasitoids, the number of plant, aphids and
+parasitoid species, respectively. A replicate was removed if any of
+the sites was outside the empirical range.
+
+For each run, we simulated the $\alpha$- and $\gamma$-tritrophic
+richness and compared it with the observed values of $\alpha$- and
+$\gamma$-tritrophic richness. The approximate Bayesian computation
+algorithm to do these comparisons works as follows
+\citep{Beaumont:2010}
+\begin{enumerate}
+\item Generate the dispersal rate, $m$ and dispersal rate from the
+  regional species pool, $\nu$, for each plant ($m_{R}$, $\nu_{R}$),
+  aphid ($m_{H}$, $\nu_{H}$), and parasitoid ($m_{P}$, $\nu_{P}$)
+  metacommunity from a uniform distribution.
+\item Simulate $\alpha$- and $\gamma$-tritrophic richness for
+  density-independent and density-dependent dispersal
+  dynamics with the parameters chosen in step 1.
+\item Calculate distance between simulated and observed $\alpha$ and
+  $\gamma$-tritrophic richness.
+\end{enumerate}
+We identified the best fit for the $\alpha$-tritrophic richness as the
+one that minimizes the sum of the absolute values of the misfits as
+follows \citep{Tarantola:2006}
+\begin{equation}
+{\Large \ell}_{\alpha}(x^{(1)}_{o},...,x^{(\mathcal{T})}_{o}|\nu_{\mathcal{\phi}},m_{\mathcal{\phi}}) = \sum_{i=1}^{\mathcal{T}} log(P(x^{(i)}_{o}|x^{(i)}),\nu_{\mathcal{\phi}},m_{\mathcal{\phi}}),
+\label{A18}
+\end{equation}
+where $\mathcal{T}$ is the number of sampled sites, $x^{(i)}_{o}$ and
+$x^{(i)}$ are the observed and predicted numbers of tritrophic chains
+in site $i$, respectively.
+
+Similarly, the likelihood for the $\gamma$-tritrophic richness was given by
+\begin{equation}
+{\Large \ell}_{\gamma}(x^{(1)}_{o},...,x^{(\mathcal{NT})}_{o}|\nu_{\mathcal{\phi}},m_{\mathcal{\phi}}) = \sum_{i=1}^{\mathcal{NT}} log(P(x^{(i)}_{o}|x^{(i)}),\nu_{\mathcal{\phi}},m_{\mathcal{\phi}}),
+\label{A21}
+\end{equation}
+where the vector $x$ is sorted from the most common to the rarest
+tritrophic chain, and $\mathcal{NT}$ is the number of tritrophic
+chains in the multi-trophic metacommunities. $x^{(i)}_{o}$ and
+$x^{(i)}$ are the observed and predicted abundances of each tritrophic
+chain $i$, respectively (i.e., the number of sites in which chain $i$
+is present). In addition to these two metrics, we computed the
+observed maximum values for the 2-site and 3-site $\beta$-tritrophic
+similarity index as a function of geographic distance (Figs. 5a and
+5b). We also computed the maximum values for the 2-site
+$\beta$-tritrophic similarity index as a function of habitat
+similarity for those sites where the information on habitat types was
+provided (Fig. 3). For example, we have two sites $A$ and $B$. Site
+$A$ contains five habitat types, $a$, $b$, $c$, $d$, and $e$, and site
+$B$ contains only $a$ and $c$. While to compute the 2-site
+$\beta$-tritrophic similarity index we used all tritrophic chains
+found at both sites $A$ and $B$ (Fig. 3a), for the 2-site
+$\beta$-tritrophic similarity index as a function of habitat
+similarity we compared only those tritrophic chains within a given
+habitat type (Fig. 3c). Model replicates to calculate the confidence
+interval (CI) in Figs. 3-5 were generated by taking the percentiles
+0.05 and 0.95 with the best parameter estimates along with a family of
+parameter values all within $0.5$*log-likelihood units away from the
+best fit.
+
+\section{Results}
+
+\newpage
+% The bibtex filename
+%\makeatletter
+%\renewcommand{\@biblabel}[1]{\quad#1.}
+%\makeatother
+\bibliographystyle{amnat2.bst}
+\bibliography{space.bib}
+
+\end{comment}
+
+\newpage
+\section{Tables}
+%\vspace{-3 in}
+\begin{table}
+\rowcolors{1}{white}{pink!20}
+\begin{tabular}{  p{3cm}  |  p{9cm} }
+%\bottomrule
+  \hline
+ % Table 1 & \textbf{Glossary of mathematical notation}\\  \hline
+  \textbf{Symbol} & \textbf{Explanation}\\  \hline
+  $\mathcal{N}$ & Number of nodes \\ \hline  
+  $\mathcal{S}$ & Number of lakes \\ \hline
+  $\mathcal{E}_{i}$ & Elevation lake $i$ \\ \hline  
+  $\mathrm{J_{i}}$ & Number of individuals in lake $i$ \\ \hline        
+  $\mathrm{m^{k}_{ij}}$ & Dispersal from lake $j$ to lake $i$ for species $k$ \\ \hline
+  $\mathcal{K}$ &  Probability of cladogenesis initiation \\ \hline
+  $\mathcal{G}$ &  Number of generations retarding anagenesis \\ \hline
+  $\tau$ &  Number of generations to have cladogenesis speciation\\ \hline
+  $\mathrm{m}$ & Intensity of dispersal \\ \hline
+  $\mathrm{\nu}$ & Dispersal rate from the regional species pool \\ \hline
+  $c$ & Upstream cost \\ \hline
+  $\lambda$ & Local birth rate of metacommunity $\mathcal$ \\ \hline
+  $\mathrm{d_{ij}}$ & Geographical distance between lake or node $i$ and $j$ \\ \hline
+  \bottomrule
+\end{tabular}
+\caption{Symbols used and parameter values}
+\end{table}
+
+\newpage
+\section{Figure Legends}
+\noindent{{\bf Figure 1. 3D dendritic networks}. \carlos{FIGURE SHOWN ONE OF THE 3D EMPIRICAL DENDRITIC NETWORKS ANALYZED}\\
+  \noindent{{\bf Figure 2}. Flow chart representing the ABC method to infer the mechanisms that best predict biodiversity patterns in 3D dendritic networks.}\\
+\noindent{{\bf Figure 3. Upstream cost in 3D dendritic
+    network}. Probability to disperse (y-axis) from lake $j$ to lake
+  $i$ as a function of distance (x-axis) given equal volume for lake
+  $i$ and $j$ and with $500$m and $10$m elevation, respectively.
+  Upstream cost increase from blue line ($c$ = 0.0001) to red ($c$ =
+  0.001), and to green ($c$ = 0.01). At short distances, the larger
+  the upstream migration cost, the lower the migration probability
+  between these two lakes. At large distances the effect of the cost
+  descreases and distances becomes more important.}\\
+
+\newpage
+\section{Figures}
+\hspace{1 in}
+\begin{figure}[htp]
+\begin{center}
+\hspace{-1 in}\includegraphics[width=11cm]{Figure1.eps}
+\caption{}
+\vspace{2 in}
+\label{Figure 1}
+\carlos{ONE OF THE EMPIRICAL 3D DENDRITIC NETWORKS}
+\end{center}
+\end{figure}
+
+
+\begin{figure}[htp]
+\begin{center}
+\vspace{-1 in}
+\hspace{-1 in}\includegraphics[width=12cm]{Figure2.eps}
+\caption{}
+\label{Figure 2}
+\end{center}
+\end{figure}
+
+
+\begin{figure}[htp]
+\begin{center}
+\hspace{-0.5 in}\includegraphics[width=12cm]{Figure3.eps}
+\caption{}
+\vspace{2 in}
+\label{Figure 2}
+\end{center}
+\end{figure}
+
+
+\end{document}
+
+
+
